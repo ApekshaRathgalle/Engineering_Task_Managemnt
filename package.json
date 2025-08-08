@@ -1,0 +1,37 @@
+{
+  "name": "engineering-task-management",
+  "version": "1.0.0",
+  "description": "Full-stack Engineering Task Management System with React, Node.js, MongoDB, and Firebase",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "start": "npm run start:backend",
+    "start:backend": "cd backend && npm start",
+    "install:all": "npm install && npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install"
+  },
+  "keywords": [
+    "react",
+    "nodejs",
+    "mongodb",
+    "firebase",
+    "typescript",
+    "task-management",
+    "engineering"
+  ],
+  "author": "ApekshaRathgalle",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ApekshaRathgalle/Engineering_Task_Management.git"
+  }
+}
