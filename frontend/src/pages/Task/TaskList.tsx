@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
 import { taskService } from '../../services/taskService';
 import { type Task } from '../../types';
@@ -7,11 +7,23 @@ import TaskCard from '../../components/TaskCard';
 import toast from 'react-hot-toast';
 
 const TaskList: React.FC = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const statusParam = queryParams.get('status');
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  
+  // Initialize filters based on URL params
+  const [statusFilter, setStatusFilter] = useState(() => {
+    if (statusParam === 'active') return 'pending'; // or 'in-progress'
+    if (statusParam === 'completed') return 'completed';
+    if (statusParam === 'overdue') return 'pending'; // You'll filter overdue separately
+    return 'all';
+  });
+  
   const [priorityFilter, setPriorityFilter] = useState('all');
 
   useEffect(() => {
@@ -50,6 +62,15 @@ const TaskList: React.FC = () => {
 
     if (priorityFilter !== 'all') {
       filtered = filtered.filter(task => task.priority === priorityFilter);
+    }
+
+    // Handle overdue filtering if statusParam is 'overdue'
+    if (statusParam === 'overdue') {
+      const now = new Date();
+      filtered = filtered.filter(task => {
+        if (!task.dueDate || task.status === 'completed') return false;
+        return new Date(task.dueDate) < now;
+      });
     }
 
     setFilteredTasks(filtered);

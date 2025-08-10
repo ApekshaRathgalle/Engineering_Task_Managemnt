@@ -1,9 +1,64 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { taskService } from '../../services/taskService';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+
+// Custom Dropdown Component
+const CustomDropdown: React.FC<{
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  name: string;
+}> = ({ label, value, options, onChange, name }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <label className="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text focus:ring-primary-500 focus:border-primary-500 transition-colors duration-300 flex justify-between items-center"
+        >
+          <span>{options.find(opt => opt.value === value)?.label || value}</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {isOpen && (
+          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-dark-card border border-gray-300 dark:border-dark-border rounded-md shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+                className="w-full px-3 py-2 text-left text-gray-900 dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-surface transition-colors first:rounded-t-md last:rounded-b-md"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Click outside to close */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-0" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
 
 const CreateTask: React.FC = () => {
   const navigate = useNavigate();
@@ -17,10 +72,23 @@ const CreateTask: React.FC = () => {
     tags: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const priorityOptions = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+  ];
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleDropdownChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
@@ -46,6 +114,8 @@ const CreateTask: React.FC = () => {
 
       await taskService.createTask(taskData);
       toast.success('Task created successfully!');
+      
+      // Navigate back to dashboard which will automatically refresh
       navigate('/dashboard');
     } catch (error) {
       toast.error('Failed to create task');
@@ -60,17 +130,17 @@ const CreateTask: React.FC = () => {
       <div className="flex items-center space-x-4">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-md text-gray-600 dark:text-dark-muted hover:text-gray-900 dark:hover:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Create New Task</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text">Create New Task</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6 transition-colors duration-300">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2">
               Task Title *
             </label>
             <input
@@ -78,7 +148,7 @@ const CreateTask: React.FC = () => {
               id="title"
               name="title"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text placeholder-gray-500 dark:placeholder-dark-muted focus:ring-primary-500 focus:border-primary-500 transition-colors duration-300"
               placeholder="Enter task title"
               value={formData.title}
               onChange={handleChange}
@@ -86,7 +156,7 @@ const CreateTask: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2">
               Description *
             </label>
             <textarea
@@ -94,7 +164,7 @@ const CreateTask: React.FC = () => {
               name="description"
               rows={4}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text placeholder-gray-500 dark:placeholder-dark-muted focus:ring-primary-500 focus:border-primary-500 transition-colors duration-300"
               placeholder="Describe the task in detail"
               value={formData.description}
               onChange={handleChange}
@@ -102,32 +172,23 @@ const CreateTask: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
-                Priority
-              </label>
-              <select
-                id="priority"
-                name="priority"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                value={formData.priority}
-                onChange={handleChange}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
+            <CustomDropdown
+              label="Priority"
+              value={formData.priority}
+              options={priorityOptions}
+              onChange={(value) => handleDropdownChange('priority', value)}
+              name="priority"
+            />
 
             <div>
-              <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2">
                 Due Date
               </label>
               <input
                 type="date"
                 id="dueDate"
                 name="dueDate"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text focus:ring-primary-500 focus:border-primary-500 transition-colors duration-300"
                 value={formData.dueDate}
                 onChange={handleChange}
               />
@@ -135,19 +196,19 @@ const CreateTask: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2">
               Tags (optional)
             </label>
             <input
               type="text"
               id="tags"
               name="tags"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text placeholder-gray-500 dark:placeholder-dark-muted focus:ring-primary-500 focus:border-primary-500 transition-colors duration-300"
               placeholder="Enter tags separated by commas"
               value={formData.tags}
               onChange={handleChange}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-dark-muted mt-1">
               Separate multiple tags with commas (e.g., frontend, urgent, bug)
             </p>
           </div>
@@ -156,7 +217,7 @@ const CreateTask: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 dark:border-dark-border rounded-md text-gray-700 dark:text-dark-muted bg-white dark:bg-dark-card hover:bg-gray-50 dark:hover:bg-dark-surface transition-colors"
             >
               Cancel
             </button>
